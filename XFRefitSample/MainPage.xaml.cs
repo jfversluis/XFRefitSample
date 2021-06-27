@@ -8,6 +8,7 @@ using System.Text;
 using System.Threading.Tasks;
 using Newtonsoft.Json;
 using Xamarin.Forms;
+using Refit;
 
 namespace XFRefitSample
 {
@@ -15,6 +16,8 @@ namespace XFRefitSample
     {
         private bool initialized = false;
         public ObservableCollection<TodoItem> TodoItems { get; set; } = new ObservableCollection<TodoItem>();
+
+        private readonly ITodoServer todoServer = RestService.For<ITodoServer>("https://jsonplaceholder.typicode.com");
 
         public MainPage()
         {
@@ -36,16 +39,31 @@ namespace XFRefitSample
 
         private async Task GetTodoItems()
         {
-            using (var httpClient = new HttpClient())
-            {
-                var todoJson = await httpClient.GetStringAsync("https://jsonplaceholder.typicode.com/todos");
-                var todoItems = JsonConvert.DeserializeObject<TodoItem[]>(todoJson);
+            //using (var httpClient = new HttpClient())
+            //{
+            //    var todoJson = await httpClient.GetStringAsync("https://jsonplaceholder.typicode.com/todos");
+            //    var todoItems = JsonConvert.DeserializeObject<TodoItem[]>(todoJson);
 
-                foreach(var item in todoItems)
-                {
-                    TodoItems.Add(item);
-                }
+            //    foreach(var item in todoItems)
+            //    {
+            //        TodoItems.Add(item);
+            //    }
+            //}
+
+            var items = await todoServer.GetTodoItems();
+
+            foreach (var item in items)
+            {
+                TodoItems.Add(item);
             }
+
+            var todoItem = await todoServer.GetTodoItem(1);
+            var savedTodoItem = await todoServer.SaveTodoItem(new TodoItem
+            {
+                Completed = true,
+                Title = "Did you subscribe to my channel yet?!",
+                UserId = 1
+            });
         }
     }
 }
